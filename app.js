@@ -154,12 +154,16 @@ function renderCard() {
             <strong>${creature.lore_age}</strong>
           </div>
           <div class="fact">
-            <span>First spotted in</span>
-            <strong>${creature.source}</strong>
+            <span>Height (estimated)</span>
+            <strong>${creature.height_estimate}</strong>
           </div>
           <div class="fact">
-            <span>Card vibe</span>
-            <strong>${creature.cute_note}</strong>
+            <span>Weight (estimated)</span>
+            <strong>${creature.weight_estimate}</strong>
+          </div>
+          <div class="fact">
+            <span>First spotted in</span>
+            <strong>${creature.source}</strong>
           </div>
         </div>
       </section>
