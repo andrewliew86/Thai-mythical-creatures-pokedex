@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thai Mythidex</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Thailand folklore field guide</p>
+          <h1 id="page-title">Thai Mythidex</h1>
+          <p class="intro">
+            Pick a region, meet a local legend, and flip through folklore cards with a playful Thai twist.
+          </p>
+        </div>
+        <div class="hero-badge" aria-label="Mythidex device">
+          <span class="badge-light badge-red"></span>
+          <span class="badge-light badge-gold"></span>
+          <span class="badge-light badge-teal"></span>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="Region filters">
+        <button class="region-button active" type="button" data-region="All">All</button>
+        <button class="region-button" type="button" data-region="Central Thailand">Central</button>
+        <button class="region-button" type="button" data-region="Eastern / Gulf Coast">Eastern / Gulf</button>
+        <button class="region-button" type="button" data-region="Northern Thailand">Northern</button>
+        <button class="region-button" type="button" data-region="Southern Thailand">Southern</button>
+      </section>
+
+      <section class="dex-layout">
+        <aside class="creature-list" aria-label="Creature list">
+          <div class="list-head">
+            <span>Local entries</span>
+            <strong id="entry-count">0</strong>
+          </div>
+          <div id="creature-list" class="list-items"></div>
+        </aside>
+
+        <article id="card" class="myth-card" aria-live="polite"></article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
