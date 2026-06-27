@@ -2,13 +2,13 @@
 
 A small GitHub Pages-friendly Pokédex-style app for Thai mythical and legendary characters.
 
+Page URL: https://andrewliew86.github.io/Thai-mythical-creatures-pokedex/
+
 ## How it works
 
 - `index.html`, `styles.css`, and `app.js` make a static frontend.
 - `data/creatures.csv` stores the lore entries.
 - `assets/creatures/*.png` stores the creature artwork used by each card.
-
-Because it is static, it can run directly on GitHub Pages without Streamlit, Python, or a build step.
 
 ## Run locally
 
