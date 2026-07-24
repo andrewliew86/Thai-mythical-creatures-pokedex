@@ -11,7 +11,7 @@ const creatureSpots = {
   macchanu: [-8, -1],
   chalawan: [-14, 3],
   "phra-aphai-mani": [12, 4],
-  "nang-phisua-samut": [17, 8],
+  "nang-phisua-samut": [27, 10],
   "phra-lo": [-7, -14],
   "phra-phuean-phaeng": [-13, -12],
   manora: [5, 15],
@@ -21,7 +21,7 @@ const creatureSpots = {
 
 const regionCenters = [
   { name: "Central Thailand", x: -10, z: 1, radius: 9 },
-  { name: "Eastern / Gulf Coast", x: 14, z: 5, radius: 9 },
+  { name: "Eastern / Gulf Coast", x: 18, z: 7, radius: 12 },
   { name: "Northern Thailand", x: -9, z: -13, radius: 10 },
   { name: "Southern Thailand", x: 9, z: 15, radius: 10 },
 ];
@@ -134,6 +134,16 @@ function groundHeight(x, z) {
 function isOnIsland(x, z) {
   const ellipse = (x * x) / (WORLD_RADIUS_X * WORLD_RADIUS_X) + (z * z) / (WORLD_RADIUS_Z * WORLD_RADIUS_Z);
   return ellipse < 0.93;
+}
+
+function isOnPier(x, z) {
+  if (x < 14.5 || x > 25.7) return false;
+  const pierCenterZ = 6.9 + (x - 14.5) * 0.24;
+  return Math.abs(z - pierCenterZ) < 1.25;
+}
+
+function isWalkable(x, z) {
+  return isOnIsland(x, z) || isOnPier(x, z);
 }
 
 function material(color, roughness = 0.9) {
@@ -286,16 +296,113 @@ function createLantern(x, z) {
   scene.add(lantern);
 }
 
-function createShrine(x, z) {
+function createStupa(parent, x, z, scale = 1) {
+  const gold = material(0xe8b52d);
+  addMesh(new THREE.CylinderGeometry(0.9 * scale, 1.15 * scale, 0.45 * scale, 12), gold, x, 0.42 * scale, z, parent);
+  addMesh(new THREE.CylinderGeometry(0.72 * scale, 0.9 * scale, 0.45 * scale, 12), material(0xf7d76b), x, 0.82 * scale, z, parent);
+  addMesh(new THREE.SphereGeometry(0.65 * scale, 12, 8), material(0xf0c64f), x, 1.28 * scale, z, parent);
+  addMesh(new THREE.ConeGeometry(0.48 * scale, 1.7 * scale, 12), gold, x, 2.3 * scale, z, parent);
+  for (let level = 0; level < 3; level += 1) {
+    addMesh(
+      new THREE.TorusGeometry((0.35 - level * 0.07) * scale, 0.055 * scale, 6, 16),
+      material(0xffe59a),
+      x,
+      (2.86 + level * 0.2) * scale,
+      z,
+      parent,
+    ).rotation.x = Math.PI / 2;
+  }
+  addMesh(new THREE.ConeGeometry(0.09 * scale, 0.7 * scale, 6), material(0xc93e32), x, 3.55 * scale, z, parent);
+}
+
+function createTempleComplex(x, z, scale = 1) {
   const y = groundHeight(x, z) + 0.62;
-  const shrine = new THREE.Group();
-  addMesh(new THREE.BoxGeometry(2.6, 0.35, 2.3), material(0xf3c655), 0, 0.18, 0, shrine);
-  addMesh(new THREE.BoxGeometry(1.65, 1.4, 1.4), material(0xf7eee0), 0, 1.05, 0, shrine);
-  const roof = addMesh(new THREE.ConeGeometry(1.55, 1.1, 4), material(0xc84035), 0, 2.05, 0, shrine);
-  roof.rotation.y = Math.PI / 4;
-  addMesh(new THREE.CylinderGeometry(0.22, 0.28, 0.75, 8), material(0xf0b933), 0, 2.85, 0, shrine);
-  shrine.position.set(x, y, z);
-  scene.add(shrine);
+  const temple = new THREE.Group();
+  const ivory = material(0xfff1d2);
+  const red = material(0xb93632);
+  const gold = material(0xf2c34b);
+  const jade = material(0x247c69);
+
+  addMesh(new THREE.BoxGeometry(7.4, 0.42, 5.2), material(0xd9b368), 0, 0.21, 0, temple);
+  addMesh(new THREE.BoxGeometry(5.3, 0.35, 3.6), material(0xf4d681), -0.7, 0.55, 0, temple);
+  addMesh(new THREE.BoxGeometry(4.7, 1.65, 3), ivory, -0.7, 1.55, -0.1, temple);
+
+  [-2.55, -1.55, 0.15, 1.15].forEach((columnX) => {
+    [-1.42, 1.22].forEach((columnZ) => {
+      addMesh(new THREE.CylinderGeometry(0.12, 0.16, 2.05, 8), red, columnX, 1.55, columnZ, temple);
+      addMesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 8), gold, columnX, 2.55, columnZ, temple);
+    });
+  });
+
+  const roofLower = addMesh(new THREE.ConeGeometry(3.65, 1.2, 4), red, -0.7, 2.92, -0.1, temple);
+  roofLower.rotation.y = Math.PI / 4;
+  roofLower.scale.z = 0.76;
+  const roofUpper = addMesh(new THREE.ConeGeometry(2.75, 0.95, 4), gold, -0.7, 3.42, -0.1, temple);
+  roofUpper.rotation.y = Math.PI / 4;
+  roofUpper.scale.z = 0.72;
+
+  [-3.25, 1.85].forEach((finialX) => {
+    [-1.42, 1.22].forEach((finialZ) => {
+      const finial = addMesh(new THREE.ConeGeometry(0.12, 0.95, 6), gold, finialX, 3.4, finialZ, temple);
+      finial.rotation.z = finialX < 0 ? -0.42 : 0.42;
+    });
+  });
+
+  for (let step = 0; step < 3; step += 1) {
+    addMesh(
+      new THREE.BoxGeometry(2.15 - step * 0.28, 0.18, 0.55),
+      material(0xe2c58e),
+      -0.7,
+      0.1 + step * 0.18,
+      2.75 - step * 0.38,
+      temple,
+    );
+  }
+
+  addMesh(new THREE.BoxGeometry(0.9, 1.35, 0.12), jade, -0.7, 1.2, 1.46, temple);
+  createStupa(temple, 2.45, -0.7, 0.82);
+  createStupa(temple, 2.6, 1.35, 0.42);
+
+  temple.position.set(x, y, z);
+  temple.scale.setScalar(scale);
+  scene.add(temple);
+}
+
+function createPier() {
+  const pier = new THREE.Group();
+  const wood = material(0x95613b);
+  const darkWood = material(0x60402f);
+  const gold = material(0xf3c34d);
+  const length = 11.5;
+  const angle = Math.atan2(2.75, 11.5);
+
+  for (let index = 0; index < 11; index += 1) {
+    const x = 15 + index * 1.02;
+    const z = 7 + index * 0.245;
+    const deck = addMesh(new THREE.BoxGeometry(1.08, 0.28, 2.25), wood, x, 0.48, z, pier);
+    deck.rotation.y = -angle;
+    [-0.88, 0.88].forEach((side) => {
+      addMesh(new THREE.CylinderGeometry(0.09, 0.12, 1.2, 6), darkWood, x, -0.02, z + side, pier);
+    });
+    if (index % 3 === 0) {
+      const lamp = addMesh(new THREE.BoxGeometry(0.26, 0.34, 0.26), gold, x, 1.45, z - 0.88, pier);
+      lamp.material.emissive = new THREE.Color(0xf08b22);
+      lamp.material.emissiveIntensity = 1.1;
+      addMesh(new THREE.CylinderGeometry(0.045, 0.06, 0.9, 6), darkWood, x, 0.9, z - 0.88, pier);
+    }
+  }
+
+  const pavilion = new THREE.Group();
+  addMesh(new THREE.BoxGeometry(3.1, 0.3, 3), wood, 0, 0.12, 0, pavilion);
+  [-1.1, 1.1].forEach((postX) => {
+    [-1.05, 1.05].forEach((postZ) => addMesh(new THREE.CylinderGeometry(0.09, 0.12, 2.2, 6), gold, postX, 1.2, postZ, pavilion));
+  });
+  const pavilionRoof = addMesh(new THREE.ConeGeometry(2.25, 1.2, 4), material(0xc84234), 0, 2.45, 0, pavilion);
+  pavilionRoof.rotation.y = Math.PI / 4;
+  pavilionRoof.scale.z = 0.8;
+  pavilion.position.set(25, 0.55, 9.4);
+  pier.add(pavilion);
+  scene.add(pier);
 }
 
 function addEnvironmentDetails() {
@@ -323,8 +430,9 @@ function addEnvironmentDetails() {
     [5, 11], [8, 14], [12, 15],
   ].forEach(([x, z]) => createLantern(x, z));
 
-  createShrine(-9, -17);
-  createShrine(13, 15);
+  createTempleComplex(-2, -17, 0.92);
+  createTempleComplex(0, 15, 0.82);
+  createPier();
 
   const trailArch = new THREE.Group();
   addMesh(new THREE.BoxGeometry(0.42, 3.1, 0.42), material(0xf0b933), -1.35, 1.55, 0, trailArch);
@@ -389,54 +497,234 @@ function createPlayer() {
   return group;
 }
 
-async function addCreatureSprites() {
-  const textureLoader = new THREE.TextureLoader();
+function addEyes(parent, y, z, spacing = 0.16, scale = 1) {
+  const eyeWhite = material(0xffffff, 0.45);
+  const pupil = material(0x201b24, 0.45);
+  [-spacing, spacing].forEach((x) => {
+    addMesh(new THREE.SphereGeometry(0.1 * scale, 8, 6), eyeWhite, x, y, z, parent);
+    addMesh(new THREE.SphereGeometry(0.052 * scale, 8, 6), pupil, x, y, z + 0.075 * scale, parent);
+  });
+}
 
-  await Promise.all(
-    state.creatures.map(
-      (creature) =>
-        new Promise((resolve) => {
-          const [x, z] = creatureSpots[creature.id] || [0, 0];
-          textureLoader.load(
-            creature.image,
-            (texture) => {
-              texture.colorSpace = THREE.SRGBColorSpace;
-              const imageRatio = texture.image.width / texture.image.height;
-              const spriteMaterial = new THREE.SpriteMaterial({
-                map: texture,
-                transparent: true,
-                alphaTest: 0.08,
-                depthWrite: false,
-              });
-              const sprite = new THREE.Sprite(spriteMaterial);
-              const height = creature.id === "nang-phisua-samut" ? 5.8 : 4.1;
-              sprite.scale.set(height * imageRatio, height, 1);
-              sprite.position.set(x, groundHeight(x, z) + height / 2 + 0.65, z);
-              sprite.userData.creature = creature;
-              sprite.userData.baseY = sprite.position.y;
-              scene.add(sprite);
-              state.sprites.push(sprite);
+function addCrown(parent, y, color = 0xf3c43f, scale = 1) {
+  addMesh(new THREE.TorusGeometry(0.34 * scale, 0.07 * scale, 6, 14), material(color), 0, y, 0, parent).rotation.x = Math.PI / 2;
+  for (let index = -2; index <= 2; index += 1) {
+    addMesh(
+      new THREE.ConeGeometry(0.09 * scale, (0.42 + (2 - Math.abs(index)) * 0.08) * scale, 6),
+      material(index === 0 ? 0xef5a47 : color),
+      index * 0.14 * scale,
+      y + 0.24 * scale,
+      0,
+      parent,
+    );
+  }
+}
 
-              const markerMaterial = new THREE.MeshBasicMaterial({
-                color: 0xf8c84a,
-                transparent: true,
-                opacity: 0.8,
-                side: THREE.DoubleSide,
-                depthWrite: false,
-              });
-              const marker = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.94, 24), markerMaterial);
-              marker.rotation.x = -Math.PI / 2;
-              marker.position.set(x, groundHeight(x, z) + 0.65, z);
-              marker.userData.forCreature = creature.id;
-              scene.add(marker);
-              resolve();
-            },
-            undefined,
-            resolve,
-          );
-        }),
-    ),
-  );
+function createHumanoid(options = {}) {
+  const group = new THREE.Group();
+  const skin = material(options.skin || 0xd99868);
+  const outfit = material(options.outfit || 0x3f8f78);
+  const trim = material(options.trim || 0xf1c94b);
+  const hair = material(options.hair || 0x2c2024);
+  const robe = options.robe !== false;
+
+  addMesh(new THREE.CylinderGeometry(0.3, 0.34, 0.65, 8), outfit, 0, 0.76, 0, group);
+  if (robe) addMesh(new THREE.ConeGeometry(0.5, 0.82, 8), outfit, 0, 0.35, 0, group);
+  addMesh(new THREE.TorusGeometry(0.31, 0.055, 6, 14), trim, 0, 0.96, 0, group).rotation.x = Math.PI / 2;
+  addMesh(new THREE.SphereGeometry(0.38, 10, 8), skin, 0, 1.42, 0, group);
+  addEyes(group, 1.48, 0.34);
+
+  if (!options.bald) {
+    const hairCap = addMesh(new THREE.SphereGeometry(0.4, 10, 7, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.58, 0, group);
+    hairCap.scale.y = options.longHair ? 1.2 : 0.78;
+    if (options.longHair) addMesh(new THREE.SphereGeometry(0.34, 9, 7), hair, 0, 1.2, -0.18, group);
+  }
+
+  [-0.43, 0.43].forEach((x) => {
+    const arm = addMesh(new THREE.CylinderGeometry(0.075, 0.09, 0.72, 7), skin, x, 0.85, 0, group);
+    arm.rotation.z = x < 0 ? -0.35 : 0.35;
+  });
+  [-0.19, 0.19].forEach((x) => addMesh(new THREE.CylinderGeometry(0.1, 0.11, 0.48, 7), material(0x6f4633), x, -0.12, 0, group));
+
+  if (options.crown) addCrown(group, 1.78, options.crownColor || 0xf3c43f);
+  return group;
+}
+
+function addTrident(parent, x = 0.62) {
+  addMesh(new THREE.CylinderGeometry(0.035, 0.045, 2, 6), material(0xd5a72c), x, 0.85, 0, parent);
+  [-0.14, 0, 0.14].forEach((offset) => {
+    addMesh(new THREE.ConeGeometry(0.07, 0.35, 6), material(0xf0ca50), x + offset, 1.92 - Math.abs(offset), 0, parent);
+  });
+}
+
+function addWings(parent, color = 0xf2c64d) {
+  [-1, 1].forEach((side) => {
+    const wing = addMesh(new THREE.ConeGeometry(0.42, 1.45, 7), material(color), side * 0.53, 0.85, -0.23, parent);
+    wing.rotation.z = side * 0.7;
+    wing.rotation.x = -0.25;
+    for (let index = 0; index < 3; index += 1) {
+      const feather = addMesh(new THREE.ConeGeometry(0.15, 0.75, 6), material(index % 2 ? 0x38a58a : 0xf7d769), side * (0.62 + index * 0.11), 0.45 - index * 0.1, -0.28, parent);
+      feather.rotation.z = side * (0.65 + index * 0.08);
+    }
+  });
+}
+
+function createMacchanuModel() {
+  const group = createHumanoid({ skin: 0xe2b08a, outfit: 0x2b9f8d, trim: 0xf1c447, crown: true, hair: 0xf4e7cf });
+  [-1, 1].forEach((side) => addMesh(new THREE.SphereGeometry(0.14, 8, 6), material(0xe2b08a), side * 0.4, 1.48, 0, group));
+  const tail = addMesh(new THREE.ConeGeometry(0.32, 1.35, 8), material(0x39a9a6), 0, -0.45, -0.05, group);
+  tail.rotation.x = Math.PI;
+  const fin = addMesh(new THREE.ConeGeometry(0.28, 0.62, 6), material(0xf08a78), 0, -1.05, -0.05, group);
+  fin.scale.x = 1.7;
+  addTrident(group);
+  return group;
+}
+
+function createChalawanModel() {
+  const group = new THREE.Group();
+  const green = material(0x397e57);
+  const belly = material(0xd7b95f);
+  const body = addMesh(new THREE.CylinderGeometry(0.55, 0.72, 2.2, 8), green, 0, 0.65, 0, group);
+  body.rotation.x = Math.PI / 2;
+  const head = addMesh(new THREE.BoxGeometry(0.95, 0.62, 1.15), green, 0, 0.85, 1.05, group);
+  head.scale.x = 1.05;
+  addMesh(new THREE.BoxGeometry(0.78, 0.22, 0.7), belly, 0, 0.67, 1.62, group);
+  addEyes(group, 1.12, 1.46, 0.25, 1.1);
+  const tail = addMesh(new THREE.ConeGeometry(0.5, 2.1, 8), green, 0, 0.62, -1.55, group);
+  tail.rotation.x = -Math.PI / 2;
+  [-0.52, 0.52].forEach((x) => {
+    [-0.15, 0.9].forEach((z) => addMesh(new THREE.BoxGeometry(0.42, 0.22, 0.65), green, x, 0.35, z, group));
+  });
+  addCrown(group, 1.42, 0xe7b83f, 0.8);
+  return group;
+}
+
+function createPhraAphaiModel() {
+  const group = createHumanoid({ outfit: 0x4a84b5, trim: 0xf2c34b, crown: true, crownColor: 0xe9bb36 });
+  const flute = addMesh(new THREE.CylinderGeometry(0.045, 0.045, 1.18, 8), material(0xd7a42e), 0, 0.98, 0.46, group);
+  flute.rotation.z = Math.PI / 2;
+  return group;
+}
+
+function createSeaOgreModel() {
+  const group = createHumanoid({ skin: 0x77b693, outfit: 0x5154a1, trim: 0xf0c54a, crown: true, longHair: true, hair: 0x212039 });
+  addMesh(new THREE.ConeGeometry(0.07, 0.26, 6), material(0xf8f2dd), -0.16, 1.22, 0.34, group).rotation.x = Math.PI;
+  addMesh(new THREE.ConeGeometry(0.07, 0.26, 6), material(0xf8f2dd), 0.16, 1.22, 0.34, group).rotation.x = Math.PI;
+  [-1, 1].forEach((side) => {
+    const shell = addMesh(new THREE.SphereGeometry(0.18, 8, 6), material(0xf48a8a), side * 0.58, 0.75, 0, group);
+    shell.scale.set(1, 1.3, 0.45);
+  });
+  return group;
+}
+
+function createPhraLoModel() {
+  const group = createHumanoid({ outfit: 0xb84b45, trim: 0xf2c44a, crown: true });
+  for (let index = -2; index <= 2; index += 1) {
+    const feather = addMesh(new THREE.ConeGeometry(0.15, 0.8, 7), material(index % 2 ? 0x2f8c78 : 0x378ab2), index * 0.18, 1.1 + Math.abs(index) * 0.03, -0.38, group);
+    feather.rotation.z = index * -0.16;
+  }
+  return group;
+}
+
+function createTwinsModel() {
+  const group = new THREE.Group();
+  const first = createHumanoid({ outfit: 0xe67f9a, trim: 0xf6d15b, crown: true, longHair: true });
+  const second = createHumanoid({ outfit: 0x7a78bd, trim: 0xf6d15b, crown: true, longHair: true });
+  first.position.x = -0.52;
+  second.position.x = 0.52;
+  first.scale.setScalar(0.82);
+  second.scale.setScalar(0.82);
+  group.add(first, second);
+  return group;
+}
+
+function createManoraModel() {
+  const group = createHumanoid({ outfit: 0xf0b73f, trim: 0x2b9b80, crown: true, longHair: true });
+  addWings(group);
+  const tail = addMesh(new THREE.ConeGeometry(0.3, 1.3, 8), material(0x38a58a), 0, -0.4, -0.16, group);
+  tail.rotation.x = Math.PI;
+  return group;
+}
+
+function createSuthonModel() {
+  const group = createHumanoid({ outfit: 0x3f7a9e, trim: 0xe6b83d, crown: true });
+  const bow = addMesh(new THREE.TorusGeometry(0.48, 0.045, 6, 18, Math.PI), material(0x85522f), 0.62, 0.75, 0, group);
+  bow.rotation.z = Math.PI / 2;
+  return group;
+}
+
+function createLuangPuThuadModel() {
+  const group = createHumanoid({ outfit: 0xd9822b, trim: 0xf1c35a, bald: true });
+  addMesh(new THREE.SphereGeometry(0.4, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), material(0xd99868), 0, 1.57, 0, group).scale.y = 0.72;
+  const beads = material(0x6b3d27);
+  for (let index = 0; index < 9; index += 1) {
+    const angle = (index / 9) * Math.PI * 1.25 - 0.35;
+    addMesh(new THREE.SphereGeometry(0.045, 6, 5), beads, Math.cos(angle) * 0.34, 0.95 + Math.sin(angle) * 0.24, 0.3, group);
+  }
+  return group;
+}
+
+function createCharacterModel(creature) {
+  const factories = {
+    macchanu: createMacchanuModel,
+    chalawan: createChalawanModel,
+    "phra-aphai-mani": createPhraAphaiModel,
+    "nang-phisua-samut": createSeaOgreModel,
+    "phra-lo": createPhraLoModel,
+    "phra-phuean-phaeng": createTwinsModel,
+    manora: createManoraModel,
+    suthon: createSuthonModel,
+    "luang-pu-thuad": createLuangPuThuadModel,
+  };
+  return (factories[creature.id] || createHumanoid)();
+}
+
+function addCreatureModels() {
+  state.creatures.forEach((creature) => {
+    const [x, z] = creatureSpots[creature.id] || [0, 0];
+    const model = createCharacterModel(creature);
+    const baseY = creature.id === "nang-phisua-samut" ? 0.35 : groundHeight(x, z) + 0.65;
+    const baseScale = creature.id === "nang-phisua-samut" ? 1.65 : creature.id === "chalawan" ? 1.25 : 1.1;
+    model.position.set(x, baseY, z);
+    model.scale.setScalar(baseScale);
+    model.userData.creature = creature;
+    model.userData.baseY = baseY;
+    model.userData.baseScale = baseScale;
+    scene.add(model);
+    state.sprites.push(model);
+
+    const marker = new THREE.Mesh(
+      new THREE.RingGeometry(0.8 * baseScale, 1.02 * baseScale, 28),
+      new THREE.MeshBasicMaterial({
+        color: 0xf8c84a,
+        transparent: true,
+        opacity: 0.84,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      }),
+    );
+    marker.rotation.x = -Math.PI / 2;
+    marker.position.set(x, creature.id === "nang-phisua-samut" ? 0.14 : groundHeight(x, z) + 0.62, z);
+    scene.add(marker);
+
+    if (creature.id === "nang-phisua-samut") {
+      [1.45, 2.15, 2.85].forEach((radius, index) => {
+        const ripple = new THREE.Mesh(
+          new THREE.RingGeometry(radius, radius + 0.08, 36),
+          new THREE.MeshBasicMaterial({
+            color: index % 2 ? 0xd7fbff : 0x5bc4d1,
+            transparent: true,
+            opacity: 0.72 - index * 0.14,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          }),
+        );
+        ripple.rotation.x = -Math.PI / 2;
+        ripple.position.set(x, 0.13 + index * 0.015, z);
+        scene.add(ripple);
+      });
+    }
+  });
 }
 
 function setCameraSize() {
@@ -472,7 +760,7 @@ function updatePlayer(delta, elapsed) {
   if (moving) {
     const nextX = player.position.x + direction.x * MOVE_SPEED * delta;
     const nextZ = player.position.z + direction.z * MOVE_SPEED * delta;
-    if (isOnIsland(nextX, nextZ)) {
+    if (isWalkable(nextX, nextZ)) {
       player.position.x = nextX;
       player.position.z = nextZ;
     }
@@ -487,6 +775,8 @@ function updatePlayer(delta, elapsed) {
     const directionSign = index % 2 === 0 ? 1 : -1;
     limb.rotation.x = moving ? Math.sin(elapsed * 10) * 0.55 * directionSign : THREE.MathUtils.lerp(limb.rotation.x, 0, delta * 8);
   });
+  ui.world.dataset.playerX = player.position.x.toFixed(2);
+  ui.world.dataset.playerZ = player.position.z.toFixed(2);
 }
 
 function updateCamera(delta) {
@@ -497,13 +787,13 @@ function updateCamera(delta) {
 }
 
 function updateCreatures(elapsed) {
-  state.sprites.forEach((sprite, index) => {
-    sprite.position.y = sprite.userData.baseY + Math.sin(elapsed * 1.8 + index) * 0.12;
-    const distance = sprite.position.distanceTo(player.position);
+  state.sprites.forEach((model, index) => {
+    model.position.y = model.userData.baseY + Math.sin(elapsed * 1.8 + index) * 0.06;
+    const distance = model.position.distanceTo(player.position);
     const scalePulse = distance < MEET_DISTANCE ? 1 + Math.sin(elapsed * 5) * 0.025 : 1;
-    sprite.material.opacity = distance < 16 ? 1 : 0.78;
-    sprite.scale.multiplyScalar(scalePulse / (sprite.userData.lastPulse || 1));
-    sprite.userData.lastPulse = scalePulse;
+    const scale = model.userData.baseScale * scalePulse;
+    model.scale.setScalar(scale);
+    model.rotation.y = Math.atan2(player.position.x - model.position.x, player.position.z - model.position.z);
   });
 }
 
@@ -687,7 +977,7 @@ async function start() {
     buildWorld();
     bindControls();
     setCameraSize();
-    await addCreatureSprites();
+    addCreatureModels();
     state.started = true;
     ui.loading.classList.add("done");
     animate();
