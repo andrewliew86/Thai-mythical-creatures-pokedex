@@ -7,6 +7,7 @@ Page URL: https://andrewliew86.github.io/Thai-mythical-creatures-pokedex/
 ## How it works
 
 - `index.html`, `styles.css`, and `app.js` make a static frontend.
+- `explore.html`, `explore.css`, and `explore.js` power the isometric 3D folklore world.
 - `data/creatures.csv` stores the lore entries.
 - `assets/creatures/*.png` stores the creature artwork used by each card.
 
@@ -19,6 +20,10 @@ python -m http.server 8000
 ```
 
 Then open `http://localhost:8000`.
+
+Use `http://localhost:8000/explore.html` to open Folklore Trails directly. Move with
+WASD or the arrow keys, press E near a legend, and use the on-screen controls on
+touch devices.
 
 ## Publish on GitHub Pages
 

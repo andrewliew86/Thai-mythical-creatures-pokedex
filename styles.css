@@ -68,6 +68,30 @@ h1 {
   font-size: clamp(1rem, 2vw, 1.28rem);
 }
 
+.explore-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  margin-top: 18px;
+  padding: 0 18px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  color: #fff;
+  background: var(--jade);
+  box-shadow: 0 5px 0 var(--ink);
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.explore-link:hover,
+.explore-link:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 var(--ink);
+  outline: 0;
+}
+
 .controls {
   display: flex;
   flex-wrap: wrap;
