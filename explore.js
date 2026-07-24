@@ -38,6 +38,7 @@ const ui = {
   meet: document.querySelector("#meet-button"),
   nearbyName: document.querySelector("#nearby-name"),
   reset: document.querySelector("#reset-button"),
+  music: document.querySelector("#music-button"),
   dialog: document.querySelector("#legend-dialog"),
   dialogContent: document.querySelector("#legend-content"),
   closeDialog: document.querySelector("#close-dialog"),
@@ -53,6 +54,14 @@ const state = {
   keys: new Set(),
   touch: new Set(),
   started: false,
+};
+
+const soundtrack = {
+  context: null,
+  master: null,
+  timer: null,
+  nextTime: 0,
+  step: 0,
 };
 
 let scene;
@@ -498,11 +507,11 @@ function createPlayer() {
 }
 
 function addEyes(parent, y, z, spacing = 0.16, scale = 1) {
-  const eyeWhite = material(0xffffff, 0.45);
-  const pupil = material(0x201b24, 0.45);
+  const eyeWhite = material(0xfff9eb, 0.48);
+  const pupil = material(0x35282a, 0.48);
   [-spacing, spacing].forEach((x) => {
-    addMesh(new THREE.SphereGeometry(0.1 * scale, 8, 6), eyeWhite, x, y, z, parent);
-    addMesh(new THREE.SphereGeometry(0.052 * scale, 8, 6), pupil, x, y, z + 0.075 * scale, parent);
+    addMesh(new THREE.SphereGeometry(0.065 * scale, 8, 6), eyeWhite, x, y, z, parent);
+    addMesh(new THREE.SphereGeometry(0.026 * scale, 8, 6), pupil, x, y, z + 0.05 * scale, parent);
   });
 }
 
@@ -915,6 +924,147 @@ function resetPlayer() {
   state.touch.clear();
 }
 
+function midiToFrequency(note) {
+  return 440 * (2 ** ((note - 69) / 12));
+}
+
+function schedulePluck(frequency, when, duration = 0.24, volume = 0.08) {
+  const oscillator = soundtrack.context.createOscillator();
+  const filter = soundtrack.context.createBiquadFilter();
+  const gain = soundtrack.context.createGain();
+
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(frequency * 1.018, when);
+  oscillator.frequency.exponentialRampToValueAtTime(frequency, when + 0.035);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(2200, when);
+  filter.frequency.exponentialRampToValueAtTime(780, when + duration);
+  gain.gain.setValueAtTime(0.0001, when);
+  gain.gain.exponentialRampToValueAtTime(volume, when + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+
+  oscillator.connect(filter);
+  filter.connect(gain);
+  gain.connect(soundtrack.master);
+  oscillator.start(when);
+  oscillator.stop(when + duration + 0.03);
+}
+
+function scheduleBass(frequency, when, duration = 0.45) {
+  const oscillator = soundtrack.context.createOscillator();
+  const gain = soundtrack.context.createGain();
+  oscillator.type = "triangle";
+  oscillator.frequency.setValueAtTime(frequency, when);
+  gain.gain.setValueAtTime(0.0001, when);
+  gain.gain.exponentialRampToValueAtTime(0.055, when + 0.025);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+  oscillator.connect(gain);
+  gain.connect(soundtrack.master);
+  oscillator.start(when);
+  oscillator.stop(when + duration + 0.03);
+}
+
+function scheduleGong(when) {
+  const oscillator = soundtrack.context.createOscillator();
+  const overtone = soundtrack.context.createOscillator();
+  const gain = soundtrack.context.createGain();
+  oscillator.type = "sine";
+  overtone.type = "triangle";
+  oscillator.frequency.setValueAtTime(196, when);
+  oscillator.frequency.exponentialRampToValueAtTime(174, when + 0.8);
+  overtone.frequency.setValueAtTime(392, when);
+  gain.gain.setValueAtTime(0.0001, when);
+  gain.gain.exponentialRampToValueAtTime(0.07, when + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.9);
+  oscillator.connect(gain);
+  overtone.connect(gain);
+  gain.connect(soundtrack.master);
+  oscillator.start(when);
+  overtone.start(when);
+  oscillator.stop(when + 0.95);
+  overtone.stop(when + 0.7);
+}
+
+function scheduleSoundtrack() {
+  if (!soundtrack.context || soundtrack.context.state === "closed") return;
+  const stepDuration = 60 / 112 / 2;
+  const melodies = [
+    [0, 2, 4, 7, 9, 7, 4, 2, 4, 7, 9, 12, 9, 7, 4, null],
+    [7, 9, 12, 14, 12, 9, 7, 4, 2, 4, 7, 9, 7, 4, 2, null],
+  ];
+  const bassNotes = [48, 48, 43, 43, 45, 45, 40, 43];
+
+  while (soundtrack.nextTime < soundtrack.context.currentTime + 0.22) {
+    const pattern = melodies[Math.floor(soundtrack.step / 16) % melodies.length];
+    const patternStep = soundtrack.step % 16;
+    const offset = pattern[patternStep];
+
+    if (offset !== null) {
+      if ([4, 10].includes(patternStep)) {
+        schedulePluck(midiToFrequency(72 + offset - 2), soundtrack.nextTime, 0.08, 0.035);
+        schedulePluck(midiToFrequency(72 + offset), soundtrack.nextTime + 0.055, 0.2, 0.07);
+      } else {
+        schedulePluck(midiToFrequency(72 + offset), soundtrack.nextTime, 0.22, 0.068);
+      }
+    }
+
+    if (patternStep % 2 === 0) {
+      scheduleBass(midiToFrequency(bassNotes[(soundtrack.step / 2) % bassNotes.length]), soundtrack.nextTime);
+    }
+    if (patternStep === 0 || patternStep === 8) {
+      scheduleGong(soundtrack.nextTime);
+    }
+
+    soundtrack.step += 1;
+    soundtrack.nextTime += stepDuration;
+  }
+}
+
+function setMusicButton(isPlaying) {
+  ui.music.classList.toggle("active", isPlaying);
+  ui.music.setAttribute("aria-pressed", String(isPlaying));
+  ui.music.setAttribute("aria-label", isPlaying ? "Turn music off" : "Turn music on");
+  ui.music.title = isPlaying ? "Turn music off" : "Turn music on";
+}
+
+async function startMusic() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  soundtrack.context = new AudioContextClass();
+  soundtrack.master = soundtrack.context.createGain();
+  soundtrack.master.gain.value = 0.58;
+  soundtrack.master.connect(soundtrack.context.destination);
+  soundtrack.nextTime = soundtrack.context.currentTime + 0.08;
+  soundtrack.step = 0;
+  await soundtrack.context.resume();
+  scheduleSoundtrack();
+  soundtrack.timer = window.setInterval(scheduleSoundtrack, 90);
+  setMusicButton(true);
+}
+
+function stopMusic() {
+  if (soundtrack.timer) window.clearInterval(soundtrack.timer);
+  soundtrack.timer = null;
+  if (soundtrack.context && soundtrack.context.state !== "closed") {
+    const contextToClose = soundtrack.context;
+    soundtrack.master.gain.cancelScheduledValues(contextToClose.currentTime);
+    soundtrack.master.gain.setValueAtTime(Math.max(soundtrack.master.gain.value, 0.0001), contextToClose.currentTime);
+    soundtrack.master.gain.exponentialRampToValueAtTime(0.0001, contextToClose.currentTime + 0.12);
+    window.setTimeout(() => contextToClose.close(), 160);
+  }
+  soundtrack.context = null;
+  soundtrack.master = null;
+  setMusicButton(false);
+}
+
+async function toggleMusic() {
+  if (soundtrack.context) {
+    stopMusic();
+  } else {
+    await startMusic();
+  }
+}
+
 function bindControls() {
   window.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
@@ -950,10 +1100,12 @@ function bindControls() {
 
   ui.meet.addEventListener("click", () => openLegend(state.nearby));
   ui.reset.addEventListener("click", resetPlayer);
+  ui.music.addEventListener("click", toggleMusic);
   ui.closeDialog.addEventListener("click", () => ui.dialog.close());
   ui.dialog.addEventListener("click", (event) => {
     if (event.target === ui.dialog) ui.dialog.close();
   });
+  window.addEventListener("pagehide", stopMusic);
 }
 
 function animate() {

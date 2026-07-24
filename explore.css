@@ -83,6 +83,11 @@ a {
   outline-offset: 2px;
 }
 
+.icon-button.active {
+  color: #fff;
+  background: var(--lotus);
+}
+
 .game-tabs {
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(92px, 1fr));
