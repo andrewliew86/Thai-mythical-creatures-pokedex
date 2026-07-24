@@ -83,7 +83,42 @@ a {
   outline-offset: 2px;
 }
 
-.title-lockup,
+.game-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(92px, 1fr));
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: rgba(255, 249, 233, 0.96);
+  box-shadow: 0 4px 0 rgba(33, 31, 42, 0.55);
+}
+
+.game-tabs a {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.game-tabs a + a {
+  border-left: 3px solid var(--ink);
+}
+
+.game-tabs a:hover,
+.game-tabs a:focus-visible {
+  background: #ffe4a1;
+  outline: 0;
+}
+
+.game-tabs a.active {
+  color: #fff;
+  background: var(--jade);
+}
+
 .discoveries {
   display: grid;
   min-height: 44px;
@@ -94,7 +129,6 @@ a {
   box-shadow: 0 4px 0 rgba(33, 31, 42, 0.55);
 }
 
-.title-lockup > span,
 .discoveries > span {
   font-size: 0.68rem;
   font-weight: 900;
@@ -102,7 +136,6 @@ a {
   text-transform: uppercase;
 }
 
-.title-lockup strong,
 .discoveries strong {
   line-height: 1.15;
 }
@@ -530,19 +563,23 @@ a {
     max-width: calc(100vw - 20px);
   }
 
-  .title-lockup > span,
   .discoveries > span {
     display: none;
   }
 
-  .title-lockup,
   .discoveries {
     min-height: 44px;
     padding: 9px 10px;
   }
 
-  .title-lockup strong {
-    font-size: 0.82rem;
+  .game-tabs {
+    grid-template-columns: repeat(2, minmax(72px, 1fr));
+  }
+
+  .game-tabs a {
+    min-height: 44px;
+    padding: 0 7px;
+    font-size: 0.7rem;
   }
 
   .discoveries strong {

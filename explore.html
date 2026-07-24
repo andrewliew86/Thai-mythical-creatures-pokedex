@@ -15,12 +15,11 @@
       <div id="world" class="world" aria-label="Interactive 3D folklore world"></div>
 
       <header class="game-header">
-        <a class="icon-button back-button" href="index.html" aria-label="Back to Mythidex" title="Back to Mythidex">←</a>
+        <nav class="game-tabs" aria-label="App views">
+          <a href="index.html">Field Guide</a>
+          <a class="active" href="explore.html" aria-current="page">3D World</a>
+        </nav>
         <button id="reset-button" class="icon-button" type="button" aria-label="Return to the trailhead" title="Return to the trailhead">↻</button>
-        <div class="title-lockup">
-          <span>Thai Mythidex</span>
-          <strong>Folklore Trails</strong>
-        </div>
         <div class="discoveries" aria-live="polite">
           <span>Legends met</span>
           <strong><span id="found-count">0</span> / <span id="total-count">9</span></strong>

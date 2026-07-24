@@ -38,6 +38,41 @@ button {
   padding: 28px 0 48px;
 }
 
+.view-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: var(--cream);
+  box-shadow: 0 5px 0 var(--ink);
+}
+
+.view-tabs a {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  color: var(--ink);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.view-tabs a + a {
+  border-left: 3px solid var(--ink);
+}
+
+.view-tabs a:hover,
+.view-tabs a:focus-visible {
+  background: #ffe9a4;
+  outline: 0;
+}
+
+.view-tabs a.active {
+  color: #fff;
+  background: var(--jade);
+}
+
 .hero {
   padding: 24px 0 18px;
   border-bottom: 5px solid rgba(231, 67, 55, 0.9);
@@ -66,30 +101,6 @@ h1 {
   margin: 14px 0 0;
   color: #4e4659;
   font-size: clamp(1rem, 2vw, 1.28rem);
-}
-
-.explore-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  margin-top: 18px;
-  padding: 0 18px;
-  border: 3px solid var(--ink);
-  border-radius: 8px;
-  color: #fff;
-  background: var(--jade);
-  box-shadow: 0 5px 0 var(--ink);
-  font-weight: 900;
-  text-decoration: none;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.explore-link:hover,
-.explore-link:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 0 var(--ink);
-  outline: 0;
 }
 
 .controls {
