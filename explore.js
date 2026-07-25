@@ -198,8 +198,7 @@ function buildWorld() {
   sunlight.shadow.camera.right = 34;
   sunlight.shadow.camera.top = 34;
   sunlight.shadow.camera.bottom = -34;
-  sunlight.shadow.bias = -0.0002;
-  sunlight.shadow.normalBias = 0.035;
+  sunlight.shadow.bias = -0.0008;
   scene.add(sunlight);
 
   const water = addMesh(
@@ -511,27 +510,22 @@ function addEyes(parent, y, z, spacing = 0.16, scale = 1) {
   const eyeWhite = material(0xfff9eb, 0.48);
   const pupil = material(0x35282a, 0.48);
   [-spacing, spacing].forEach((x) => {
-    addMesh(new THREE.BoxGeometry(0.11 * scale, 0.1 * scale, 0.045 * scale), eyeWhite, x, y, z, parent);
-    addMesh(new THREE.BoxGeometry(0.038 * scale, 0.05 * scale, 0.028 * scale), pupil, x, y, z + 0.035 * scale, parent);
+    addMesh(new THREE.SphereGeometry(0.065 * scale, 8, 6), eyeWhite, x, y, z, parent);
+    addMesh(new THREE.SphereGeometry(0.026 * scale, 8, 6), pupil, x, y, z + 0.05 * scale, parent);
   });
 }
 
 function addCrown(parent, y, color = 0xf3c43f, scale = 1) {
-  const crownBand = addMesh(new THREE.BoxGeometry(0.76 * scale, 0.12 * scale, 0.68 * scale), material(color), 0, y, 0, parent);
-  crownBand.castShadow = false;
-  crownBand.receiveShadow = false;
+  addMesh(new THREE.TorusGeometry(0.34 * scale, 0.07 * scale, 6, 14), material(color), 0, y, 0, parent).rotation.x = Math.PI / 2;
   for (let index = -2; index <= 2; index += 1) {
-    const height = 0.3 + (2 - Math.abs(index)) * 0.09;
-    const spire = addMesh(
-      new THREE.BoxGeometry(0.1 * scale, height * scale, 0.12 * scale),
+    addMesh(
+      new THREE.ConeGeometry(0.09 * scale, (0.42 + (2 - Math.abs(index)) * 0.08) * scale, 6),
       material(index === 0 ? 0xef5a47 : color),
       index * 0.14 * scale,
-      y + (0.08 + height / 2) * scale,
+      y + 0.24 * scale,
       0,
       parent,
     );
-    spire.castShadow = false;
-    spire.receiveShadow = false;
   }
 }
 
@@ -543,62 +537,42 @@ function createHumanoid(options = {}) {
   const hair = material(options.hair || 0x2c2024);
   const robe = options.robe !== false;
 
-  addMesh(new THREE.BoxGeometry(0.62, 0.68, 0.5), outfit, 0, 0.76, 0, group);
-  if (robe) {
-    addMesh(new THREE.BoxGeometry(0.76, 0.62, 0.62), outfit, 0, 0.26, 0, group);
-    addMesh(new THREE.BoxGeometry(0.84, 0.14, 0.66), trim, 0, -0.02, 0, group);
-  }
-  addMesh(new THREE.BoxGeometry(0.7, 0.1, 0.55), trim, 0, 1.02, 0, group);
-  addMesh(new THREE.BoxGeometry(0.78, 0.72, 0.68), skin, 0, 1.52, 0, group);
-  addEyes(group, 1.55, 0.355);
-  [-0.28, 0.28].forEach((x) => {
-    addMesh(new THREE.BoxGeometry(0.09, 0.055, 0.035), material(0xea8b91), x, 1.38, 0.36, group);
-  });
-  addMesh(new THREE.BoxGeometry(0.12, 0.035, 0.035), material(0x914e5a), 0, 1.34, 0.36, group);
+  addMesh(new THREE.CylinderGeometry(0.3, 0.34, 0.65, 8), outfit, 0, 0.76, 0, group);
+  if (robe) addMesh(new THREE.ConeGeometry(0.5, 0.82, 8), outfit, 0, 0.35, 0, group);
+  addMesh(new THREE.TorusGeometry(0.31, 0.055, 6, 14), trim, 0, 0.96, 0, group).rotation.x = Math.PI / 2;
+  addMesh(new THREE.SphereGeometry(0.38, 10, 8), skin, 0, 1.42, 0, group);
+  addEyes(group, 1.48, 0.34);
 
   if (!options.bald) {
-    const hairTop = addMesh(new THREE.BoxGeometry(0.82, 0.12, 0.72), hair, 0, 1.95, 0, group);
-    hairTop.receiveShadow = false;
-    [
-      { x: -0.27, y: 1.85, width: 0.2, height: 0.12 },
-      { x: 0, y: 1.83, width: 0.24, height: 0.16 },
-      { x: 0.27, y: 1.86, width: 0.2, height: 0.1 },
-    ].forEach(({ x, y, width, height }) => {
-      const fringe = addMesh(new THREE.BoxGeometry(width, height, 0.1), hair, x, y, 0.42, group);
-      fringe.castShadow = false;
-      fringe.receiveShadow = false;
-    });
-    if (options.longHair) {
-      addMesh(new THREE.BoxGeometry(0.7, 0.72, 0.2), hair, 0, 1.43, -0.38, group);
-    }
+    const hairCap = addMesh(new THREE.SphereGeometry(0.4, 10, 7, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.58, 0, group);
+    hairCap.scale.y = options.longHair ? 1.2 : 0.78;
+    if (options.longHair) addMesh(new THREE.SphereGeometry(0.34, 9, 7), hair, 0, 1.2, -0.18, group);
   }
 
   [-0.43, 0.43].forEach((x) => {
-    const arm = addMesh(new THREE.BoxGeometry(0.16, 0.66, 0.18), skin, x, 0.78, 0, group);
+    const arm = addMesh(new THREE.CylinderGeometry(0.075, 0.09, 0.72, 7), skin, x, 0.85, 0, group);
     arm.rotation.z = x < 0 ? -0.35 : 0.35;
   });
-  [-0.19, 0.19].forEach((x) => {
-    addMesh(new THREE.BoxGeometry(0.22, 0.48, 0.24), material(0x6f4633), x, -0.3, 0, group);
-  });
+  [-0.19, 0.19].forEach((x) => addMesh(new THREE.CylinderGeometry(0.1, 0.11, 0.48, 7), material(0x6f4633), x, -0.12, 0, group));
 
-  if (options.crown) addCrown(group, 2.1, options.crownColor || 0xf3c43f);
+  if (options.crown) addCrown(group, 1.78, options.crownColor || 0xf3c43f);
   return group;
 }
 
 function addTrident(parent, x = 0.62) {
-  addMesh(new THREE.BoxGeometry(0.07, 2, 0.07), material(0xd5a72c), x, 0.85, 0, parent);
+  addMesh(new THREE.CylinderGeometry(0.035, 0.045, 2, 6), material(0xd5a72c), x, 0.85, 0, parent);
   [-0.14, 0, 0.14].forEach((offset) => {
-    addMesh(new THREE.BoxGeometry(0.09, 0.34, 0.09), material(0xf0ca50), x + offset, 1.92 - Math.abs(offset), 0, parent);
+    addMesh(new THREE.ConeGeometry(0.07, 0.35, 6), material(0xf0ca50), x + offset, 1.92 - Math.abs(offset), 0, parent);
   });
 }
 
 function addWings(parent, color = 0xf2c64d) {
   [-1, 1].forEach((side) => {
-    const wing = addMesh(new THREE.BoxGeometry(0.36, 1.25, 0.18), material(color), side * 0.56, 0.86, -0.28, parent);
+    const wing = addMesh(new THREE.ConeGeometry(0.42, 1.45, 7), material(color), side * 0.53, 0.85, -0.23, parent);
     wing.rotation.z = side * 0.7;
     wing.rotation.x = -0.25;
     for (let index = 0; index < 3; index += 1) {
-      const feather = addMesh(new THREE.BoxGeometry(0.16, 0.72, 0.16), material(index % 2 ? 0x38a58a : 0xf7d769), side * (0.62 + index * 0.11), 0.45 - index * 0.1, -0.31, parent);
+      const feather = addMesh(new THREE.ConeGeometry(0.15, 0.75, 6), material(index % 2 ? 0x38a58a : 0xf7d769), side * (0.62 + index * 0.11), 0.45 - index * 0.1, -0.28, parent);
       feather.rotation.z = side * (0.65 + index * 0.08);
     }
   });
@@ -606,14 +580,11 @@ function addWings(parent, color = 0xf2c64d) {
 
 function createMacchanuModel() {
   const group = createHumanoid({ skin: 0xe2b08a, outfit: 0x2b9f8d, trim: 0xf1c447, crown: true, hair: 0xf4e7cf });
-  [-1, 1].forEach((side) => {
-    addMesh(new THREE.BoxGeometry(0.2, 0.25, 0.16), material(0xe2b08a), side * 0.46, 1.55, 0, group);
-  });
-  addMesh(new THREE.BoxGeometry(0.52, 0.9, 0.48), material(0x39a9a6), 0, -0.52, -0.05, group);
-  [-1, 1].forEach((side) => {
-    const fin = addMesh(new THREE.BoxGeometry(0.42, 0.3, 0.18), material(0xf08a78), side * 0.2, -1.04, -0.05, group);
-    fin.rotation.z = side * 0.48;
-  });
+  [-1, 1].forEach((side) => addMesh(new THREE.SphereGeometry(0.14, 8, 6), material(0xe2b08a), side * 0.4, 1.48, 0, group));
+  const tail = addMesh(new THREE.ConeGeometry(0.32, 1.35, 8), material(0x39a9a6), 0, -0.45, -0.05, group);
+  tail.rotation.x = Math.PI;
+  const fin = addMesh(new THREE.ConeGeometry(0.28, 0.62, 6), material(0xf08a78), 0, -1.05, -0.05, group);
+  fin.scale.x = 1.7;
   addTrident(group);
   return group;
 }
@@ -622,14 +593,14 @@ function createChalawanModel() {
   const group = new THREE.Group();
   const green = material(0x397e57);
   const belly = material(0xd7b95f);
-  addMesh(new THREE.BoxGeometry(1.15, 0.68, 2.15), green, 0, 0.65, 0, group);
+  const body = addMesh(new THREE.CylinderGeometry(0.55, 0.72, 2.2, 8), green, 0, 0.65, 0, group);
+  body.rotation.x = Math.PI / 2;
   const head = addMesh(new THREE.BoxGeometry(0.95, 0.62, 1.15), green, 0, 0.85, 1.05, group);
   head.scale.x = 1.05;
   addMesh(new THREE.BoxGeometry(0.78, 0.22, 0.7), belly, 0, 0.67, 1.62, group);
   addEyes(group, 1.12, 1.46, 0.25, 1.1);
-  addMesh(new THREE.BoxGeometry(0.82, 0.52, 0.9), green, 0, 0.62, -1.5, group);
-  addMesh(new THREE.BoxGeometry(0.55, 0.42, 0.72), green, 0, 0.6, -2.28, group);
-  addMesh(new THREE.BoxGeometry(0.3, 0.28, 0.52), green, 0, 0.58, -2.86, group);
+  const tail = addMesh(new THREE.ConeGeometry(0.5, 2.1, 8), green, 0, 0.62, -1.55, group);
+  tail.rotation.x = -Math.PI / 2;
   [-0.52, 0.52].forEach((x) => {
     [-0.15, 0.9].forEach((z) => addMesh(new THREE.BoxGeometry(0.42, 0.22, 0.65), green, x, 0.35, z, group));
   });
@@ -639,7 +610,8 @@ function createChalawanModel() {
 
 function createPhraAphaiModel() {
   const group = createHumanoid({ outfit: 0x4a84b5, trim: 0xf2c34b, crown: true, crownColor: 0xe9bb36 });
-  addMesh(new THREE.BoxGeometry(1.18, 0.08, 0.08), material(0xd7a42e), 0, 0.98, 0.46, group);
+  const flute = addMesh(new THREE.CylinderGeometry(0.045, 0.045, 1.18, 8), material(0xd7a42e), 0, 0.98, 0.46, group);
+  flute.rotation.z = Math.PI / 2;
   return group;
 }
 
@@ -648,7 +620,8 @@ function createSeaOgreModel() {
   addMesh(new THREE.ConeGeometry(0.07, 0.26, 6), material(0xf8f2dd), -0.16, 1.22, 0.34, group).rotation.x = Math.PI;
   addMesh(new THREE.ConeGeometry(0.07, 0.26, 6), material(0xf8f2dd), 0.16, 1.22, 0.34, group).rotation.x = Math.PI;
   [-1, 1].forEach((side) => {
-    addMesh(new THREE.BoxGeometry(0.26, 0.36, 0.14), material(0xf48a8a), side * 0.58, 0.75, 0, group);
+    const shell = addMesh(new THREE.SphereGeometry(0.18, 8, 6), material(0xf48a8a), side * 0.58, 0.75, 0, group);
+    shell.scale.set(1, 1.3, 0.45);
   });
   return group;
 }
@@ -656,7 +629,7 @@ function createSeaOgreModel() {
 function createPhraLoModel() {
   const group = createHumanoid({ outfit: 0xb84b45, trim: 0xf2c44a, crown: true });
   for (let index = -2; index <= 2; index += 1) {
-    const feather = addMesh(new THREE.BoxGeometry(0.16, 0.72, 0.14), material(index % 2 ? 0x2f8c78 : 0x378ab2), index * 0.18, 1.1 + Math.abs(index) * 0.03, -0.42, group);
+    const feather = addMesh(new THREE.ConeGeometry(0.15, 0.8, 7), material(index % 2 ? 0x2f8c78 : 0x378ab2), index * 0.18, 1.1 + Math.abs(index) * 0.03, -0.38, group);
     feather.rotation.z = index * -0.16;
   }
   return group;
@@ -677,27 +650,25 @@ function createTwinsModel() {
 function createManoraModel() {
   const group = createHumanoid({ outfit: 0xf0b73f, trim: 0x2b9b80, crown: true, longHair: true });
   addWings(group);
-  addMesh(new THREE.BoxGeometry(0.48, 0.92, 0.4), material(0x38a58a), 0, -0.5, -0.16, group);
-  addMesh(new THREE.BoxGeometry(0.7, 0.24, 0.22), material(0xf0b73f), 0, -1.02, -0.16, group);
+  const tail = addMesh(new THREE.ConeGeometry(0.3, 1.3, 8), material(0x38a58a), 0, -0.4, -0.16, group);
+  tail.rotation.x = Math.PI;
   return group;
 }
 
 function createSuthonModel() {
   const group = createHumanoid({ outfit: 0x3f7a9e, trim: 0xe6b83d, crown: true });
-  const bowTop = addMesh(new THREE.BoxGeometry(0.08, 0.58, 0.08), material(0x85522f), 0.62, 0.98, 0, group);
-  bowTop.rotation.z = -0.35;
-  const bowBottom = addMesh(new THREE.BoxGeometry(0.08, 0.58, 0.08), material(0x85522f), 0.62, 0.48, 0, group);
-  bowBottom.rotation.z = 0.35;
-  addMesh(new THREE.BoxGeometry(0.035, 1.05, 0.035), material(0xf1e7cf), 0.53, 0.73, 0, group);
+  const bow = addMesh(new THREE.TorusGeometry(0.48, 0.045, 6, 18, Math.PI), material(0x85522f), 0.62, 0.75, 0, group);
+  bow.rotation.z = Math.PI / 2;
   return group;
 }
 
 function createLuangPuThuadModel() {
   const group = createHumanoid({ outfit: 0xd9822b, trim: 0xf1c35a, bald: true });
+  addMesh(new THREE.SphereGeometry(0.4, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), material(0xd99868), 0, 1.57, 0, group).scale.y = 0.72;
   const beads = material(0x6b3d27);
   for (let index = 0; index < 9; index += 1) {
     const angle = (index / 9) * Math.PI * 1.25 - 0.35;
-    addMesh(new THREE.BoxGeometry(0.07, 0.07, 0.07), beads, Math.cos(angle) * 0.34, 0.95 + Math.sin(angle) * 0.24, 0.3, group);
+    addMesh(new THREE.SphereGeometry(0.045, 6, 5), beads, Math.cos(angle) * 0.34, 0.95 + Math.sin(angle) * 0.24, 0.3, group);
   }
   return group;
 }
@@ -721,9 +692,6 @@ function addCreatureModels() {
   state.creatures.forEach((creature) => {
     const [x, z] = creatureSpots[creature.id] || [0, 0];
     const model = createCharacterModel(creature);
-    model.traverse((part) => {
-      if (part.isMesh) part.receiveShadow = false;
-    });
     const baseY = creature.id === "nang-phisua-samut" ? 0.35 : groundHeight(x, z) + 0.65;
     const baseScale = creature.id === "nang-phisua-samut" ? 1.65 : creature.id === "chalawan" ? 1.25 : 1.1;
     model.position.set(x, baseY, z);
