@@ -1,14 +1,11 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const DATA_URL = "data/creatures.csv";
-const MODEL_BASE_URL = "assets/models/creatures";
 const WORLD_RADIUS_X = 25;
 const WORLD_RADIUS_Z = 22;
 const TILE_SIZE = 2;
 const MOVE_SPEED = 6.2;
 const MEET_DISTANCE = 4.2;
-const gltfLoader = new GLTFLoader();
 
 const creatureSpots = {
   macchanu: [-8, -1],
@@ -512,174 +509,246 @@ function createPlayer() {
   return group;
 }
 
-function addEyes(parent, y, z, spacing = 0.16, scale = 1) {
-  const eyeWhite = material(0xfff9eb, 0.48);
-  const pupil = material(0x35282a, 0.48);
+function addBlock(parent, size, color, position, rotation = [0, 0, 0]) {
+  const block = addMesh(
+    new THREE.BoxGeometry(size[0], size[1], size[2]),
+    material(color, 0.78),
+    position[0],
+    position[1],
+    position[2],
+    parent,
+  );
+  block.rotation.set(rotation[0], rotation[1], rotation[2]);
+  return block;
+}
+
+function addBlockFace(parent, y, spacing = 0.17, scale = 1, expression = "smile") {
   [-spacing, spacing].forEach((x) => {
-    addMesh(new THREE.SphereGeometry(0.065 * scale, 8, 6), eyeWhite, x, y, z, parent);
-    addMesh(new THREE.SphereGeometry(0.026 * scale, 8, 6), pupil, x, y, z + 0.05 * scale, parent);
+    addBlock(parent, [0.1 * scale, 0.12 * scale, 0.035 * scale], 0x2b2530, [x, y, 0.355 * scale]);
+    addBlock(parent, [0.035 * scale, 0.035 * scale, 0.02 * scale], 0xffffff, [x - 0.018 * scale, y + 0.025 * scale, 0.377 * scale]);
+  });
+  const mouthColor = expression === "fierce" ? 0xf8f1dd : 0xb8414d;
+  addBlock(parent, [0.16 * scale, 0.045 * scale, 0.03 * scale], mouthColor, [0, y - 0.2 * scale, 0.37 * scale]);
+}
+
+function addBlockCrown(parent, y, color = 0xf2c84b, scale = 1) {
+  addBlock(parent, [0.68 * scale, 0.13 * scale, 0.68 * scale], color, [0, y, 0]);
+  [-0.23, 0, 0.23].forEach((x, index) => {
+    const height = (index === 1 ? 0.42 : 0.3) * scale;
+    addBlock(
+      parent,
+      [0.13 * scale, height, 0.13 * scale],
+      index === 1 ? 0xe84f43 : color,
+      [x * scale, y + height / 2 + 0.05 * scale, 0],
+    );
   });
 }
 
-function addCrown(parent, y, color = 0xf3c43f, scale = 1) {
-  addMesh(new THREE.TorusGeometry(0.34 * scale, 0.07 * scale, 6, 14), material(color), 0, y, 0, parent).rotation.x = Math.PI / 2;
-  for (let index = -2; index <= 2; index += 1) {
-    addMesh(
-      new THREE.ConeGeometry(0.09 * scale, (0.42 + (2 - Math.abs(index)) * 0.08) * scale, 6),
-      material(index === 0 ? 0xef5a47 : color),
-      index * 0.14 * scale,
-      y + 0.24 * scale,
-      0,
-      parent,
-    );
-  }
-}
-
-function createHumanoid(options = {}) {
+function createBlockHumanoid(options = {}) {
   const group = new THREE.Group();
-  const skin = material(options.skin || 0xd99868);
-  const outfit = material(options.outfit || 0x3f8f78);
-  const trim = material(options.trim || 0xf1c94b);
-  const hair = material(options.hair || 0x2c2024);
+  const skin = options.skin || 0xd99868;
+  const outfit = options.outfit || 0x2e9b87;
+  const trim = options.trim || 0xf2c84b;
+  const hair = options.hair || 0x35231e;
   const robe = options.robe !== false;
 
-  addMesh(new THREE.CylinderGeometry(0.3, 0.34, 0.65, 8), outfit, 0, 0.76, 0, group);
-  if (robe) addMesh(new THREE.ConeGeometry(0.5, 0.82, 8), outfit, 0, 0.35, 0, group);
-  addMesh(new THREE.TorusGeometry(0.31, 0.055, 6, 14), trim, 0, 0.96, 0, group).rotation.x = Math.PI / 2;
-  addMesh(new THREE.SphereGeometry(0.38, 10, 8), skin, 0, 1.42, 0, group);
-  addEyes(group, 1.48, 0.34);
-
-  if (!options.bald) {
-    const hairCap = addMesh(new THREE.SphereGeometry(0.4, 10, 7, 0, Math.PI * 2, 0, Math.PI / 2), hair, 0, 1.58, 0, group);
-    hairCap.scale.y = options.longHair ? 1.2 : 0.78;
-    if (options.longHair) addMesh(new THREE.SphereGeometry(0.34, 9, 7), hair, 0, 1.2, -0.18, group);
+  addBlock(group, [0.62, 0.72, 0.4], outfit, [0, 0.64, 0]);
+  addBlock(group, [0.68, 0.12, 0.44], trim, [0, 0.9, 0.01]);
+  if (robe) {
+    addBlock(group, [0.78, 0.58, 0.45], outfit, [0, 0.22, 0]);
+    addBlock(group, [0.82, 0.1, 0.48], trim, [0, -0.02, 0.01]);
   }
 
-  [-0.43, 0.43].forEach((x) => {
-    const arm = addMesh(new THREE.CylinderGeometry(0.075, 0.09, 0.72, 7), skin, x, 0.85, 0, group);
-    arm.rotation.z = x < 0 ? -0.35 : 0.35;
-  });
-  [-0.19, 0.19].forEach((x) => addMesh(new THREE.CylinderGeometry(0.1, 0.11, 0.48, 7), material(0x6f4633), x, -0.12, 0, group));
+  addBlock(group, [0.72, 0.72, 0.72], skin, [0, 1.38, 0]);
+  addBlockFace(group, 1.45, 0.17, 1, options.expression);
 
-  if (options.crown) addCrown(group, 1.78, options.crownColor || 0xf3c43f);
+  if (!options.bald) {
+    addBlock(group, [0.76, 0.2, 0.76], hair, [0, 1.68, -0.01]);
+    addBlock(group, [0.76, options.longHair ? 0.75 : 0.28, 0.2], hair, [0, options.longHair ? 1.35 : 1.52, -0.35]);
+    addBlock(group, [0.16, 0.3, 0.08], hair, [-0.28, 1.54, 0.34], [0, 0, -0.18]);
+  }
+
+  [-1, 1].forEach((side) => {
+    addBlock(group, [0.2, 0.58, 0.22], outfit, [side * 0.45, 0.68, 0], [0, 0, side * -0.12]);
+    addBlock(group, [0.2, 0.18, 0.22], skin, [side * 0.48, 0.36, 0.01]);
+    addBlock(group, [0.24, 0.52, 0.3], options.legColor || 0x70452f, [side * 0.19, -0.2, 0]);
+    addBlock(group, [0.28, 0.14, 0.42], options.shoeColor || 0x3a2930, [side * 0.19, -0.49, 0.06]);
+  });
+
+  if (options.sash) {
+    addBlock(group, [0.13, 0.92, 0.46], trim, [-0.03, 0.58, 0.03], [0, 0, -0.55]);
+  }
+  if (options.crown) addBlockCrown(group, 1.78, options.crownColor || trim);
   return group;
 }
 
-function addTrident(parent, x = 0.62) {
-  addMesh(new THREE.CylinderGeometry(0.035, 0.045, 2, 6), material(0xd5a72c), x, 0.85, 0, parent);
-  [-0.14, 0, 0.14].forEach((offset) => {
-    addMesh(new THREE.ConeGeometry(0.07, 0.35, 6), material(0xf0ca50), x + offset, 1.92 - Math.abs(offset), 0, parent);
+function addBlockTrident(parent, x = 0.66) {
+  addBlock(parent, [0.08, 1.9, 0.08], 0xc89224, [x, 0.65, 0]);
+  [-0.16, 0, 0.16].forEach((offset) => {
+    addBlock(parent, [0.08, offset === 0 ? 0.44 : 0.34, 0.08], 0xf2c84b, [x + offset, 1.67 - Math.abs(offset), 0]);
+    addBlock(parent, [0.16, 0.08, 0.08], 0xf2c84b, [x + offset, 1.86 - Math.abs(offset), 0], [0, 0, Math.PI / 4]);
   });
 }
 
-function addWings(parent, color = 0xf2c64d) {
+function addBlockWings(parent) {
   [-1, 1].forEach((side) => {
-    const wing = addMesh(new THREE.ConeGeometry(0.42, 1.45, 7), material(color), side * 0.53, 0.85, -0.23, parent);
-    wing.rotation.z = side * 0.7;
-    wing.rotation.x = -0.25;
-    for (let index = 0; index < 3; index += 1) {
-      const feather = addMesh(new THREE.ConeGeometry(0.15, 0.75, 6), material(index % 2 ? 0x38a58a : 0xf7d769), side * (0.62 + index * 0.11), 0.45 - index * 0.1, -0.28, parent);
-      feather.rotation.z = side * (0.65 + index * 0.08);
+    for (let index = 0; index < 4; index += 1) {
+      addBlock(
+        parent,
+        [0.24, 0.86 - index * 0.09, 0.18],
+        index % 2 ? 0x2e9b87 : 0xf2c84b,
+        [side * (0.52 + index * 0.17), 0.73 - index * 0.1, -0.23],
+        [0.12, 0, side * (0.52 + index * 0.1)],
+      );
     }
   });
 }
 
 function createMacchanuModel() {
-  const group = createHumanoid({ skin: 0xe2b08a, outfit: 0x2b9f8d, trim: 0xf1c447, crown: true, hair: 0xf4e7cf });
-  [-1, 1].forEach((side) => addMesh(new THREE.SphereGeometry(0.14, 8, 6), material(0xe2b08a), side * 0.4, 1.48, 0, group));
-  const tail = addMesh(new THREE.ConeGeometry(0.32, 1.35, 8), material(0x39a9a6), 0, -0.45, -0.05, group);
-  tail.rotation.x = Math.PI;
-  const fin = addMesh(new THREE.ConeGeometry(0.28, 0.62, 6), material(0xf08a78), 0, -1.05, -0.05, group);
-  fin.scale.x = 1.7;
-  addTrident(group);
+  const group = createBlockHumanoid({
+    skin: 0xe6b28a,
+    outfit: 0x2e9b87,
+    trim: 0xf2c84b,
+    crown: true,
+    hair: 0xfff8e8,
+    sash: true,
+  });
+  [-1, 1].forEach((side) => {
+    addBlock(group, [0.2, 0.24, 0.18], 0xe6b28a, [side * 0.43, 1.43, 0]);
+  });
+  addBlock(group, [0.34, 0.18, 0.16], 0xf5d2ae, [0, 1.25, 0.39]);
+  addBlock(group, [0.38, 0.62, 0.38], 0x39a9a6, [0, -0.15, -0.02]);
+  addBlock(group, [0.22, 0.58, 0.26], 0x39a9a6, [0, -0.62, -0.02]);
+  [-1, 1].forEach((side) => {
+    addBlock(group, [0.34, 0.22, 0.12], 0xef8b78, [side * 0.18, -0.92, -0.02], [0, 0, side * 0.45]);
+  });
+  addBlockTrident(group);
   return group;
 }
 
 function createChalawanModel() {
   const group = new THREE.Group();
-  const green = material(0x397e57);
-  const belly = material(0xd7b95f);
-  const body = addMesh(new THREE.CylinderGeometry(0.55, 0.72, 2.2, 8), green, 0, 0.65, 0, group);
-  body.rotation.x = Math.PI / 2;
-  const head = addMesh(new THREE.BoxGeometry(0.95, 0.62, 1.15), green, 0, 0.85, 1.05, group);
-  head.scale.x = 1.05;
-  addMesh(new THREE.BoxGeometry(0.78, 0.22, 0.7), belly, 0, 0.67, 1.62, group);
-  addEyes(group, 1.12, 1.46, 0.25, 1.1);
-  const tail = addMesh(new THREE.ConeGeometry(0.5, 2.1, 8), green, 0, 0.62, -1.55, group);
-  tail.rotation.x = -Math.PI / 2;
-  [-0.52, 0.52].forEach((x) => {
-    [-0.15, 0.9].forEach((z) => addMesh(new THREE.BoxGeometry(0.42, 0.22, 0.65), green, x, 0.35, z, group));
+  const green = 0x397e57;
+  addBlock(group, [1.05, 0.62, 1.55], green, [0, 0.48, 0]);
+  addBlock(group, [1.12, 0.68, 0.88], green, [0, 0.62, 1.04]);
+  addBlock(group, [0.96, 0.3, 0.7], 0x67aa70, [0, 0.45, 1.55]);
+  addBlock(group, [0.74, 0.12, 0.42], 0xfff8e8, [0, 0.37, 1.91]);
+  [-1, 1].forEach((side) => {
+    addBlock(group, [0.18, 0.18, 0.18], 0x30242b, [side * 0.31, 0.84, 1.48]);
+    addBlock(group, [0.42, 0.24, 0.62], green, [side * 0.63, 0.2, 0.48]);
+    addBlock(group, [0.42, 0.24, 0.62], green, [side * 0.63, 0.2, -0.48]);
   });
-  addCrown(group, 1.42, 0xe7b83f, 0.8);
+  addBlock(group, [0.74, 0.48, 0.74], green, [0, 0.45, -1.08]);
+  addBlock(group, [0.52, 0.38, 0.72], green, [0, 0.43, -1.72], [0.08, 0, 0]);
+  addBlock(group, [0.3, 0.26, 0.72], green, [0, 0.39, -2.28], [0.14, 0, 0]);
+  addBlockCrown(group, 1.02, 0xf2c84b, 0.82);
   return group;
 }
 
 function createPhraAphaiModel() {
-  const group = createHumanoid({ outfit: 0x4a84b5, trim: 0xf2c34b, crown: true, crownColor: 0xe9bb36 });
-  const flute = addMesh(new THREE.CylinderGeometry(0.045, 0.045, 1.18, 8), material(0xd7a42e), 0, 0.98, 0.46, group);
-  flute.rotation.z = Math.PI / 2;
+  const group = createBlockHumanoid({ outfit: 0x4a84b5, trim: 0xf2c84b, crown: true, sash: true });
+  addBlock(group, [1.2, 0.09, 0.09], 0xc89224, [0, 1.02, 0.47], [0, 0, 0.06]);
+  [-0.34, -0.12, 0.12, 0.34].forEach((x) => {
+    addBlock(group, [0.035, 0.035, 0.02], 0x30242b, [x, 1.02 + x * 0.06, 0.53]);
+  });
   return group;
 }
 
 function createSeaOgreModel() {
-  const group = createHumanoid({ skin: 0x77b693, outfit: 0x5154a1, trim: 0xf0c54a, crown: true, longHair: true, hair: 0x212039 });
-  addMesh(new THREE.ConeGeometry(0.07, 0.26, 6), material(0xf8f2dd), -0.16, 1.22, 0.34, group).rotation.x = Math.PI;
-  addMesh(new THREE.ConeGeometry(0.07, 0.26, 6), material(0xf8f2dd), 0.16, 1.22, 0.34, group).rotation.x = Math.PI;
+  const group = createBlockHumanoid({
+    skin: 0x67aa70,
+    outfit: 0x8063a7,
+    trim: 0xf2c84b,
+    crown: true,
+    longHair: true,
+    hair: 0x212039,
+    expression: "fierce",
+  });
   [-1, 1].forEach((side) => {
-    const shell = addMesh(new THREE.SphereGeometry(0.18, 8, 6), material(0xf48a8a), side * 0.58, 0.75, 0, group);
-    shell.scale.set(1, 1.3, 0.45);
+    addBlock(group, [0.11, 0.24, 0.1], 0xfff8e8, [side * 0.14, 1.2, 0.39], [0, 0, side * 0.2]);
+    addBlock(group, [0.28, 0.34, 0.12], 0xef8b78, [side * 0.56, 0.7, 0.08], [0, 0, side * 0.4]);
   });
   return group;
 }
 
 function createPhraLoModel() {
-  const group = createHumanoid({ outfit: 0xb84b45, trim: 0xf2c44a, crown: true });
+  const group = createBlockHumanoid({ outfit: 0xc94d43, trim: 0xf2c84b, crown: true, sash: true });
   for (let index = -2; index <= 2; index += 1) {
-    const feather = addMesh(new THREE.ConeGeometry(0.15, 0.8, 7), material(index % 2 ? 0x2f8c78 : 0x378ab2), index * 0.18, 1.1 + Math.abs(index) * 0.03, -0.38, group);
-    feather.rotation.z = index * -0.16;
+    addBlock(
+      group,
+      [0.19, 0.76 - Math.abs(index) * 0.05, 0.12],
+      index % 2 ? 0x4a84b5 : 0x2e9b87,
+      [index * 0.18, 1.02 + Math.abs(index) * 0.03, -0.38],
+      [0, 0, index * -0.16],
+    );
+    addBlock(group, [0.08, 0.08, 0.04], 0xf2c84b, [index * 0.18, 1.22, -0.45]);
   }
   return group;
 }
 
 function createTwinsModel() {
   const group = new THREE.Group();
-  const first = createHumanoid({ outfit: 0xe67f9a, trim: 0xf6d15b, crown: true, longHair: true });
-  const second = createHumanoid({ outfit: 0x7a78bd, trim: 0xf6d15b, crown: true, longHair: true });
-  first.position.x = -0.52;
-  second.position.x = 0.52;
-  first.scale.setScalar(0.82);
-  second.scale.setScalar(0.82);
+  const first = createBlockHumanoid({ outfit: 0xe78391, trim: 0xf2c84b, crown: true, longHair: true, sash: true });
+  const second = createBlockHumanoid({ outfit: 0x8063a7, trim: 0xf2c84b, crown: true, longHair: true, sash: true });
+  first.position.x = -0.5;
+  second.position.x = 0.5;
+  first.scale.setScalar(0.8);
+  second.scale.setScalar(0.8);
   group.add(first, second);
+  addBlock(group, [0.22, 0.22, 0.12], 0xef8b78, [0, 0.82, 0.42], [0, 0, Math.PI / 4]);
   return group;
 }
 
 function createManoraModel() {
-  const group = createHumanoid({ outfit: 0xf0b73f, trim: 0x2b9b80, crown: true, longHair: true });
-  addWings(group);
-  const tail = addMesh(new THREE.ConeGeometry(0.3, 1.3, 8), material(0x38a58a), 0, -0.4, -0.16, group);
-  tail.rotation.x = Math.PI;
-  return group;
-}
-
-function createSuthonModel() {
-  const group = createHumanoid({ outfit: 0x3f7a9e, trim: 0xe6b83d, crown: true });
-  const bow = addMesh(new THREE.TorusGeometry(0.48, 0.045, 6, 18, Math.PI), material(0x85522f), 0.62, 0.75, 0, group);
-  bow.rotation.z = Math.PI / 2;
-  return group;
-}
-
-function createLuangPuThuadModel() {
-  const group = createHumanoid({ outfit: 0xd9822b, trim: 0xf1c35a, bald: true });
-  addMesh(new THREE.SphereGeometry(0.4, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), material(0xd99868), 0, 1.57, 0, group).scale.y = 0.72;
-  const beads = material(0x6b3d27);
-  for (let index = 0; index < 9; index += 1) {
-    const angle = (index / 9) * Math.PI * 1.25 - 0.35;
-    addMesh(new THREE.SphereGeometry(0.045, 6, 5), beads, Math.cos(angle) * 0.34, 0.95 + Math.sin(angle) * 0.24, 0.3, group);
+  const group = createBlockHumanoid({
+    outfit: 0xf2c84b,
+    trim: 0x2e9b87,
+    crown: true,
+    longHair: true,
+    sash: true,
+    legColor: 0xc89224,
+  });
+  addBlockWings(group);
+  for (let index = -2; index <= 2; index += 1) {
+    addBlock(
+      group,
+      [0.18, 0.7 - Math.abs(index) * 0.08, 0.14],
+      index % 2 ? 0xf2c84b : 0x2e9b87,
+      [index * 0.14, -0.25, -0.32],
+      [0.2, 0, index * -0.18],
+    );
   }
   return group;
 }
 
-function createProceduralCharacterModel(creature) {
+function createSuthonModel() {
+  const group = createBlockHumanoid({ outfit: 0x3f7a9e, trim: 0xf2c84b, crown: true, sash: true });
+  addBlock(group, [0.08, 1.12, 0.08], 0x75452e, [0.65, 0.68, 0], [0, 0, -0.42]);
+  addBlock(group, [0.08, 0.58, 0.08], 0x75452e, [0.48, 1.08, 0], [0, 0, 0.65]);
+  addBlock(group, [0.08, 0.58, 0.08], 0x75452e, [0.82, 0.28, 0], [0, 0, 0.65]);
+  addBlock(group, [0.035, 1.02, 0.035], 0xfff8e8, [0.66, 0.68, 0]);
+  return group;
+}
+
+function createLuangPuThuadModel() {
+  const group = createBlockHumanoid({
+    outfit: 0xd9822b,
+    trim: 0xf2c84b,
+    bald: true,
+    robe: true,
+    legColor: 0x8c4d24,
+    shoeColor: 0x8c4d24,
+  });
+  addBlock(group, [0.68, 0.12, 0.68], 0xd99868, [0, 1.68, 0]);
+  for (let index = 0; index < 9; index += 1) {
+    const angle = -0.25 + index * 0.42;
+    addBlock(group, [0.075, 0.075, 0.075], 0x75452e, [Math.cos(angle) * 0.34, 0.86 + Math.sin(angle) * 0.24, 0.25]);
+  }
+  addBlock(group, [0.08, 1.45, 0.08], 0x75452e, [0.62, 0.38, 0]);
+  return group;
+}
+
+function createBlockCharacterModel(creature) {
   const factories = {
     macchanu: createMacchanuModel,
     chalawan: createChalawanModel,
@@ -691,31 +760,14 @@ function createProceduralCharacterModel(creature) {
     suthon: createSuthonModel,
     "luang-pu-thuad": createLuangPuThuadModel,
   };
-  return (factories[creature.id] || createHumanoid)();
+  const model = (factories[creature.id] || createBlockHumanoid)();
+  model.name = `${creature.name_en} voxel character`;
+  model.userData.assetSource = "reference-inspired voxel";
+  return model;
 }
 
 async function createCharacterModel(creature) {
-  try {
-    const gltf = await gltfLoader.loadAsync(`${MODEL_BASE_URL}/${creature.id}.glb`);
-    const model = new THREE.Group();
-    const asset = gltf.scene;
-    const bounds = new THREE.Box3().setFromObject(asset);
-    const center = bounds.getCenter(new THREE.Vector3());
-    asset.position.x -= center.x;
-    asset.position.z -= center.z;
-    asset.traverse((part) => {
-      if (!part.isMesh) return;
-      part.castShadow = true;
-      part.receiveShadow = true;
-    });
-    model.name = `${creature.name_en} Blender model`;
-    model.userData.assetSource = "blender";
-    model.add(asset);
-    return model;
-  } catch (error) {
-    console.warn(`Using the procedural fallback for ${creature.name_en}.`, error);
-    return createProceduralCharacterModel(creature);
-  }
+  return createBlockCharacterModel(creature);
 }
 
 async function addCreatureModels() {

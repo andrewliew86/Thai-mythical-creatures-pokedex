@@ -20,8 +20,8 @@ legendary characters from across Thailand.
 
 - Explore a procedurally generated isometric world with rivers, forests, beaches,
   Thai temples, pagodas, shrines, and an offshore pier.
-- Meet nine cute, low-poly folklore characters created in Blender and placed in
-  environments connected to their stories.
+- Meet nine chunky voxel-style folklore characters inspired by the supplied
+  block-character references and placed in environments connected to their stories.
 - Discover a character by approaching them, then open their description, powers,
   measurements, and stats.
 - Open the in-world question-mark guide at any time for movement and discovery
@@ -38,9 +38,8 @@ legendary characters from across Thailand.
 - `explore.html`, `explore.css`, and `explore.js` power the Three.js 3D World.
 - `data/creatures.csv` stores the folklore entries.
 - `assets/creatures/*.png` stores the Field Guide character portraits.
-- `assets/models/creatures/*.glb` stores the web-ready Blender character models.
-- `blender/characters/*.blend` stores the editable Blender source files.
-- `blender/generate_characters.py` rebuilds every Blender and GLB character asset.
+- `explore.js` builds the web-ready voxel characters from lightweight Three.js
+  block geometry, including each legend's costume and signature accessories.
 - `assets/screenshots/` stores README and project screenshots.
 
 The project is entirely static and can be hosted directly on GitHub Pages.
@@ -63,31 +62,23 @@ Open the Field Guide at `http://localhost:8000` or open the 3D World directly at
 3. Set the row's `image` value, for example
    `assets/creatures/new-legend.png`.
 4. Add the character's world position in `explore.js`.
-5. Add a Blender builder to `blender/generate_characters.py`, then regenerate
-   the `.blend` and `.glb` files.
+5. Add a block-character builder and register it in
+   `createBlockCharacterModel()` in `explore.js`.
 
 Keep values containing commas inside quotes, such as
 `"Songkhla, Pattani, and sea routes"`.
 
-## Regenerate the 3D Characters
+## Character Art Direction
 
-Each character has an editable `.blend` source file and a compact `.glb` export
-for the website. Their rounded proportions, friendly faces, bright Thai-inspired
-colours, and small character-specific accessories create a consistent kawaii
-style across the cast.
+The active 3D cast is assembled directly in `explore.js` from compact block
+geometry. All nine characters share the supplied references' large square head,
+short body, rectangular limbs, and crisp voxel silhouette. Character-specific
+details keep each legend readable at game scale: Macchanu has a fish tail and
+trident, Chalawan has a crocodile body and crown, Phra Aphai Mani carries his
+flute, Manora has golden wings, and Luang Pu Thuad wears a saffron robe and beads.
 
-Install Blender 4.2 or newer, then rebuild all character sources and exports from
-the project root:
-
-```bash
-blender --background --python blender/generate_characters.py
-```
-
-The generator creates the source files in `blender/characters` and exports the
-web models to `assets/models/creatures`. The 3D World loads those GLB files with
-Three.js `GLTFLoader`, including their materials and shadows. If a model is
-missing or cannot load, the original procedural Three.js character is used as a
-fallback so the world remains playable.
+Because the characters are generated at runtime, their palettes, proportions,
+and accessories can be adjusted directly in the Three.js source.
 
 ## Publish on GitHub Pages
 
