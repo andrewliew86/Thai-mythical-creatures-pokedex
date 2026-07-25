@@ -42,6 +42,9 @@ const ui = {
   nearbyName: document.querySelector("#nearby-name"),
   reset: document.querySelector("#reset-button"),
   music: document.querySelector("#music-button"),
+  help: document.querySelector("#help-button"),
+  helpDialog: document.querySelector("#help-dialog"),
+  closeHelp: document.querySelector("#close-help"),
   dialog: document.querySelector("#legend-dialog"),
   dialogContent: document.querySelector("#legend-content"),
   closeDialog: document.querySelector("#close-dialog"),
@@ -795,7 +798,7 @@ function movementVector() {
 }
 
 function updatePlayer(delta, elapsed) {
-  if (ui.dialog.open) return;
+  if (ui.dialog.open || ui.helpDialog.open) return;
   const direction = movementVector();
   const moving = direction.lengthSq() > 0;
 
@@ -891,7 +894,7 @@ function updateRegion() {
 }
 
 function openLegend(creature) {
-  if (!creature) return;
+  if (!creature || ui.helpDialog.open) return;
   state.found.add(creature.id);
   ui.found.textContent = state.found.size;
 
@@ -1106,8 +1109,9 @@ function bindControls() {
     }
     state.keys.add(key);
     if (key === "e" && state.nearby) openLegend(state.nearby);
-    if (key === "r" && !ui.dialog.open) resetPlayer();
+    if (key === "r" && !ui.dialog.open && !ui.helpDialog.open) resetPlayer();
     if (key === "escape" && ui.dialog.open) ui.dialog.close();
+    if (key === "escape" && ui.helpDialog.open) ui.helpDialog.close();
   });
 
   window.addEventListener("keyup", (event) => state.keys.delete(event.key.toLowerCase()));
@@ -1137,6 +1141,11 @@ function bindControls() {
   ui.meet.addEventListener("click", () => openLegend(state.nearby));
   ui.reset.addEventListener("click", resetPlayer);
   ui.music.addEventListener("click", toggleMusic);
+  ui.help.addEventListener("click", () => ui.helpDialog.showModal());
+  ui.closeHelp.addEventListener("click", () => ui.helpDialog.close());
+  ui.helpDialog.addEventListener("click", (event) => {
+    if (event.target === ui.helpDialog) ui.helpDialog.close();
+  });
   ui.closeDialog.addEventListener("click", () => ui.dialog.close());
   ui.dialog.addEventListener("click", (event) => {
     if (event.target === ui.dialog) ui.dialog.close();

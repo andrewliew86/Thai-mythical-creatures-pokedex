@@ -20,10 +20,12 @@ legendary characters from across Thailand.
 
 - Explore a procedurally generated isometric world with rivers, forests, beaches,
   Thai temples, pagodas, shrines, and an offshore pier.
-- Meet nine distinct low-poly 3D folklore characters in environments connected to
-  their stories.
+- Meet nine cute, low-poly folklore characters created in Blender and placed in
+  environments connected to their stories.
 - Discover a character by approaching them, then open their description, powers,
   measurements, and stats.
+- Open the in-world question-mark guide at any time for movement and discovery
+  instructions.
 - Listen to an original Thai-inspired chiptune soundtrack with plucked melodies,
   bass, and gong accents.
 - Move with WASD or the arrow keys, press E to meet a nearby legend, and press R
@@ -69,15 +71,23 @@ Keep values containing commas inside quotes, such as
 
 ## Regenerate the 3D Characters
 
-Install Blender 4.2 or newer, then run this command from the project root:
+Each character has an editable `.blend` source file and a compact `.glb` export
+for the website. Their rounded proportions, friendly faces, bright Thai-inspired
+colours, and small character-specific accessories create a consistent kawaii
+style across the cast.
+
+Install Blender 4.2 or newer, then rebuild all character sources and exports from
+the project root:
 
 ```bash
 blender --background --python blender/generate_characters.py
 ```
 
-The app loads the exported GLB files with Three.js `GLTFLoader`. If a model is
+The generator creates the source files in `blender/characters` and exports the
+web models to `assets/models/creatures`. The 3D World loads those GLB files with
+Three.js `GLTFLoader`, including their materials and shadows. If a model is
 missing or cannot load, the original procedural Three.js character is used as a
-fallback.
+fallback so the world remains playable.
 
 ## Publish on GitHub Pages
 

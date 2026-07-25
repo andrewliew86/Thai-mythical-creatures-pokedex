@@ -367,6 +367,113 @@ a {
   backdrop-filter: blur(5px);
 }
 
+.help-dialog {
+  width: min(520px, calc(100% - 28px));
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 4px solid var(--ink);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 14px 0 rgba(33, 31, 42, 0.28);
+}
+
+.help-dialog::backdrop {
+  background: rgba(21, 39, 45, 0.66);
+  backdrop-filter: blur(5px);
+}
+
+.help-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px;
+  border-bottom: 4px solid var(--ink);
+  background: var(--gold);
+}
+
+.help-heading > div {
+  display: grid;
+}
+
+.help-heading span:not(.help-mark) {
+  color: #8c2d2f;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.help-heading h2 {
+  margin: 0;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.help-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--jade);
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+
+.help-content {
+  display: grid;
+  gap: 0;
+  padding: 8px 22px 22px;
+}
+
+.help-step {
+  padding: 13px 0;
+  border-bottom: 2px solid #ded5c1;
+}
+
+.help-step strong {
+  color: #a3212c;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.help-step p {
+  margin: 3px 46px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding-top: 16px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.help-actions span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.help-actions b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 1rem;
+}
+
 .close-button {
   position: absolute;
   z-index: 2;
@@ -572,7 +679,13 @@ a {
   .game-header {
     top: 10px;
     left: 10px;
+    gap: 6px;
     max-width: calc(100vw - 20px);
+  }
+
+  .game-header > .icon-button {
+    width: 40px;
+    height: 44px;
   }
 
   .discoveries > span {
@@ -585,7 +698,7 @@ a {
   }
 
   .game-tabs {
-    grid-template-columns: repeat(2, minmax(72px, 1fr));
+    grid-template-columns: repeat(2, minmax(64px, 1fr));
   }
 
   .game-tabs a {
@@ -659,6 +772,18 @@ a {
   .legend-body {
     gap: 14px;
     padding: 14px;
+  }
+
+  .help-heading {
+    padding: 18px;
+  }
+
+  .help-content {
+    padding: 6px 18px 18px;
+  }
+
+  .help-step p {
+    margin-right: 32px;
   }
 }
 
