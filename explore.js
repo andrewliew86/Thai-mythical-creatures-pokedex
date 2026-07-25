@@ -557,17 +557,17 @@ function createHumanoid(options = {}) {
   addMesh(new THREE.BoxGeometry(0.12, 0.035, 0.035), material(0x914e5a), 0, 1.34, 0.36, group);
 
   if (!options.bald) {
-    const hairTop = addMesh(
-      new THREE.SphereGeometry(0.46, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2),
-      hair,
-      0,
-      1.79,
-      -0.01,
-      group,
-    );
-    hairTop.scale.set(1, 0.38, 0.86);
+    const hairTop = addMesh(new THREE.BoxGeometry(0.82, 0.12, 0.72), hair, 0, 1.95, 0, group);
     hairTop.receiveShadow = false;
-    addMesh(new THREE.BoxGeometry(0.13, 0.18, 0.71), hair, -0.34, 1.69, -0.02, group);
+    [
+      { x: -0.27, y: 1.85, width: 0.2, height: 0.12 },
+      { x: 0, y: 1.83, width: 0.24, height: 0.16 },
+      { x: 0.27, y: 1.86, width: 0.2, height: 0.1 },
+    ].forEach(({ x, y, width, height }) => {
+      const fringe = addMesh(new THREE.BoxGeometry(width, height, 0.1), hair, x, y, 0.42, group);
+      fringe.castShadow = false;
+      fringe.receiveShadow = false;
+    });
     if (options.longHair) {
       addMesh(new THREE.BoxGeometry(0.7, 0.72, 0.2), hair, 0, 1.43, -0.38, group);
     }
