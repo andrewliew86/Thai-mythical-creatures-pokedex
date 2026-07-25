@@ -198,7 +198,8 @@ function buildWorld() {
   sunlight.shadow.camera.right = 34;
   sunlight.shadow.camera.top = 34;
   sunlight.shadow.camera.bottom = -34;
-  sunlight.shadow.bias = -0.0008;
+  sunlight.shadow.bias = -0.0002;
+  sunlight.shadow.normalBias = 0.035;
   scene.add(sunlight);
 
   const water = addMesh(
@@ -516,10 +517,12 @@ function addEyes(parent, y, z, spacing = 0.16, scale = 1) {
 }
 
 function addCrown(parent, y, color = 0xf3c43f, scale = 1) {
-  addMesh(new THREE.BoxGeometry(0.76 * scale, 0.12 * scale, 0.68 * scale), material(color), 0, y, 0, parent);
+  const crownBand = addMesh(new THREE.BoxGeometry(0.76 * scale, 0.12 * scale, 0.68 * scale), material(color), 0, y, 0, parent);
+  crownBand.castShadow = false;
+  crownBand.receiveShadow = false;
   for (let index = -2; index <= 2; index += 1) {
     const height = 0.3 + (2 - Math.abs(index)) * 0.09;
-    addMesh(
+    const spire = addMesh(
       new THREE.BoxGeometry(0.1 * scale, height * scale, 0.12 * scale),
       material(index === 0 ? 0xef5a47 : color),
       index * 0.14 * scale,
@@ -527,6 +530,8 @@ function addCrown(parent, y, color = 0xf3c43f, scale = 1) {
       0,
       parent,
     );
+    spire.castShadow = false;
+    spire.receiveShadow = false;
   }
 }
 
@@ -552,7 +557,8 @@ function createHumanoid(options = {}) {
   addMesh(new THREE.BoxGeometry(0.12, 0.035, 0.035), material(0x914e5a), 0, 1.34, 0.36, group);
 
   if (!options.bald) {
-    addMesh(new THREE.BoxGeometry(0.82, 0.2, 0.72), hair, 0, 1.84, -0.02, group);
+    const hairTop = addMesh(new THREE.BoxGeometry(0.82, 0.2, 0.72), hair, 0, 1.84, -0.02, group);
+    hairTop.receiveShadow = false;
     addMesh(new THREE.BoxGeometry(0.13, 0.18, 0.71), hair, -0.34, 1.69, -0.02, group);
     if (options.longHair) {
       addMesh(new THREE.BoxGeometry(0.7, 0.72, 0.2), hair, 0, 1.43, -0.38, group);
@@ -567,7 +573,7 @@ function createHumanoid(options = {}) {
     addMesh(new THREE.BoxGeometry(0.22, 0.48, 0.24), material(0x6f4633), x, -0.3, 0, group);
   });
 
-  if (options.crown) addCrown(group, 2.03, options.crownColor || 0xf3c43f);
+  if (options.crown) addCrown(group, 2.1, options.crownColor || 0xf3c43f);
   return group;
 }
 
@@ -707,6 +713,9 @@ function addCreatureModels() {
   state.creatures.forEach((creature) => {
     const [x, z] = creatureSpots[creature.id] || [0, 0];
     const model = createCharacterModel(creature);
+    model.traverse((part) => {
+      if (part.isMesh) part.receiveShadow = false;
+    });
     const baseY = creature.id === "nang-phisua-samut" ? 0.35 : groundHeight(x, z) + 0.65;
     const baseScale = creature.id === "nang-phisua-samut" ? 1.65 : creature.id === "chalawan" ? 1.25 : 1.1;
     model.position.set(x, baseY, z);
