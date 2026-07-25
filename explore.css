@@ -260,6 +260,9 @@ a {
   grid-template-columns: repeat(3, 48px);
   grid-template-rows: repeat(2, 48px);
   gap: 5px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .touch-controls button {
@@ -270,6 +273,10 @@ a {
   box-shadow: 0 3px 0 var(--ink);
   font-weight: 900;
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .touch-controls button:active {
