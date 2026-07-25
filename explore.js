@@ -1,11 +1,14 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js";
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const DATA_URL = "data/creatures.csv";
+const MODEL_BASE_URL = "assets/models/creatures";
 const WORLD_RADIUS_X = 25;
 const WORLD_RADIUS_Z = 22;
 const TILE_SIZE = 2;
 const MOVE_SPEED = 6.2;
 const MEET_DISTANCE = 4.2;
+const gltfLoader = new GLTFLoader();
 
 const creatureSpots = {
   macchanu: [-8, -1],
@@ -673,7 +676,7 @@ function createLuangPuThuadModel() {
   return group;
 }
 
-function createCharacterModel(creature) {
+function createProceduralCharacterModel(creature) {
   const factories = {
     macchanu: createMacchanuModel,
     chalawan: createChalawanModel,
@@ -688,10 +691,40 @@ function createCharacterModel(creature) {
   return (factories[creature.id] || createHumanoid)();
 }
 
-function addCreatureModels() {
-  state.creatures.forEach((creature) => {
+async function createCharacterModel(creature) {
+  try {
+    const gltf = await gltfLoader.loadAsync(`${MODEL_BASE_URL}/${creature.id}.glb`);
+    const model = new THREE.Group();
+    const asset = gltf.scene;
+    const bounds = new THREE.Box3().setFromObject(asset);
+    const center = bounds.getCenter(new THREE.Vector3());
+    asset.position.x -= center.x;
+    asset.position.z -= center.z;
+    asset.traverse((part) => {
+      if (!part.isMesh) return;
+      part.castShadow = true;
+      part.receiveShadow = true;
+    });
+    model.name = `${creature.name_en} Blender model`;
+    model.userData.assetSource = "blender";
+    model.add(asset);
+    return model;
+  } catch (error) {
+    console.warn(`Using the procedural fallback for ${creature.name_en}.`, error);
+    return createProceduralCharacterModel(creature);
+  }
+}
+
+async function addCreatureModels() {
+  const loadedCharacters = await Promise.all(
+    state.creatures.map(async (creature) => ({
+      creature,
+      model: await createCharacterModel(creature),
+    })),
+  );
+
+  loadedCharacters.forEach(({ creature, model }) => {
     const [x, z] = creatureSpots[creature.id] || [0, 0];
-    const model = createCharacterModel(creature);
     const baseY = creature.id === "nang-phisua-samut" ? 0.35 : groundHeight(x, z) + 0.65;
     const baseScale = creature.id === "nang-phisua-samut" ? 1.65 : creature.id === "chalawan" ? 1.25 : 1.1;
     model.position.set(x, baseY, z);
@@ -1132,7 +1165,7 @@ async function start() {
     buildWorld();
     bindControls();
     setCameraSize();
-    addCreatureModels();
+    await addCreatureModels();
     state.started = true;
     ui.loading.classList.add("done");
     animate();
