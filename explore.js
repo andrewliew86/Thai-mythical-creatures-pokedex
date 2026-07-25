@@ -557,7 +557,7 @@ function createHumanoid(options = {}) {
   addMesh(new THREE.BoxGeometry(0.12, 0.035, 0.035), material(0x914e5a), 0, 1.34, 0.36, group);
 
   if (!options.bald) {
-    const hairTop = addMesh(new THREE.BoxGeometry(0.82, 0.2, 0.72), hair, 0, 1.84, -0.02, group);
+    const hairTop = addMesh(new THREE.BoxGeometry(0.84, 0.22, 0.76), hair, 0, 1.85, 0, group);
     hairTop.receiveShadow = false;
     addMesh(new THREE.BoxGeometry(0.13, 0.18, 0.71), hair, -0.34, 1.69, -0.02, group);
     if (options.longHair) {
