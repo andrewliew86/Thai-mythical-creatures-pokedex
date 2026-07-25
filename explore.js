@@ -567,7 +567,7 @@ function createHumanoid(options = {}) {
     addMesh(new THREE.BoxGeometry(0.22, 0.48, 0.24), material(0x6f4633), x, -0.3, 0, group);
   });
 
-  if (options.crown) addCrown(group, 2, options.crownColor || 0xf3c43f);
+  if (options.crown) addCrown(group, 2.03, options.crownColor || 0xf3c43f);
   return group;
 }
 
