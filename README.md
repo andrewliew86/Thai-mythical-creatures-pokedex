@@ -3,7 +3,7 @@
 A playful Pokedex-inspired field guide and 3D adventure featuring mythical and
 legendary characters from across Thailand.
 
-**Live app:** [andrewliew86.github.io/Thai-mythical-creatures-pokedex](https://andrewliew86.github.io/Thai-mythical-creatures-pokedex/)
+**Live app:** [andrewliew86.github.io/Thai-mythical-creatures-pokedex](https://andrewliew86.github.io/Thai-mythical-characters-pokedex/)
 
 ![Thai Mythidex 3D World with the player exploring Central Thailand](assets/screenshots/thai-mythidex-3d-world.png)
 
